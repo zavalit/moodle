@@ -24,6 +24,31 @@ Feature: Steps can be navigated within a tour
     Then I should see "Calendar events"
 
   @javascript
+  Scenario: Orphaned tour steps remain visible after scrolling
+    Given I log in as "admin"
+    And I add a new user tour with:
+      | Name                 | Scrolled tour |
+      | Description          | Scrolled tour |
+      | Apply to URL match   | /my/% |
+      | Tour is enabled      | 1 |
+      | Display step numbers | 1 |
+    And I add steps to the "Scrolled tour" tour:
+      | targettype | targetvalue_selector | Title       | id_content                    | Content type |
+      | Selector   | #page-footer         | Page footer | This step scrolls the page.    | Manual       |
+    And I add steps to the "Scrolled tour" tour:
+      | targettype                | Title         | id_content                         | Content type |
+      | Display in middle of page | Orphaned step | This step remains in the viewport. | Manual       |
+    And I change viewport size to "1024x768"
+    When I am on homepage
+    And I wait until the page is ready
+    Then I should see "This step scrolls the page."
+    And the page should be vertically scrolled
+    When I click on "Next (1/2)" "button" in the "Page footer" "dialogue"
+    And I wait until the page is ready
+    Then I should see "This step remains in the viewport."
+    And the user tour should be fully visible in the viewport
+
+  @javascript
   Scenario: End tour button text for one step tours
     Given I log in as "admin"
     And I add a new user tour with:

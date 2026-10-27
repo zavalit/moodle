@@ -1345,9 +1345,10 @@ const Tour = class {
                 'overflow': 'auto',
             });
         }
-        currentStepNode.offset({
-            top: top,
-            left: Math.ceil((viewportWidth - stepWidth) / 2)
+        // Orphaned steps use fixed positioning, so their coordinates must remain relative to the viewport.
+        currentStepNode.css({
+            top: top + 'px',
+            left: Math.ceil((viewportWidth - stepWidth) / 2) + 'px',
         });
     }
 

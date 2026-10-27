@@ -26,6 +26,8 @@
 require_once(__DIR__ . '/../../../../../lib/behat/behat_base.php');
 
 use Behat\Gherkin\Node\TableNode;
+use Behat\Mink\Exception\ExpectationException;
+
 /**
  * User tour related steps definitions.
  *
@@ -94,5 +96,60 @@ class behat_tool_usertours extends behat_base {
             get_string('appearance', 'admin') . ' > ' .
                 get_string('usertours', 'tool_usertours')
         );
+    }
+
+    /**
+     * Checks that the page has a non-zero vertical scroll position.
+     *
+     * @Then /^the page should be vertically scrolled$/
+     * @throws ExpectationException
+     */
+    public function the_page_should_be_vertically_scrolled(): void {
+        $scrolltop = $this->evaluate_script('return window.scrollY;');
+
+        if ($scrolltop <= 0) {
+            throw new ExpectationException(
+                'The page has not been vertically scrolled.',
+                $this->getSession(),
+            );
+        }
+    }
+
+    /**
+     * Checks that the orphaned user tour dialogue is fully contained within the viewport.
+     *
+     * @Then /^the user tour should be fully visible in the viewport$/
+     * @throws ExpectationException
+     */
+    public function the_user_tour_should_be_fully_visible_in_the_viewport(): void {
+        $this->find('css_element', 'span[data-flexitour="container"].orphan');
+
+        $geometry = $this->evaluate_script(<<<'EOF'
+            return (function() {
+                const dialogue = document.querySelector('span[data-flexitour="container"].orphan');
+                const rect = dialogue.getBoundingClientRect();
+
+                return {
+                    bottom: rect.bottom,
+                    fits: rect.top >= 0
+                        && rect.left >= 0
+                        && rect.bottom <= window.innerHeight
+                        && rect.right <= window.innerWidth,
+                    left: rect.left,
+                    right: rect.right,
+                    scrollY: window.scrollY,
+                    top: rect.top,
+                    viewportHeight: window.innerHeight,
+                    viewportWidth: window.innerWidth,
+                };
+            })();
+        EOF);
+
+        if (!$geometry['fits']) {
+            throw new ExpectationException(
+                'The user tour dialogue is not fully visible in the viewport: ' . json_encode($geometry),
+                $this->getSession(),
+            );
+        }
     }
 }
